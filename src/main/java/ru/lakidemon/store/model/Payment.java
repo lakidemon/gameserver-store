@@ -21,8 +21,6 @@ public class Payment {
     @OneToOne
     @JoinColumn(name = "order_id")
     private Order order;
-    @Column(name = "ip")
-    private String ip;
     @Column(name = "pay_link")
     private String payLink;
     @Column(name = "time_finished")
