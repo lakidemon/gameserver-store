@@ -1,6 +1,7 @@
 package ru.lakidemon.store.unitpay;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import lombok.Data;
@@ -14,7 +15,8 @@ public class RequestParams {
 
     private int unitpayId;
     private int projectId;
-    private String account;
+    @JsonProperty("account")
+    private long orderId;
     private double payerSum;
     private String payerCurrency;
     private double profit;

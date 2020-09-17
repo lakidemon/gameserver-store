@@ -1,7 +1,9 @@
-package ru.lakidemon.store.unitpay;
+package ru.lakidemon.store.service;
 
 import ru.lakidemon.store.model.Order;
 import ru.lakidemon.store.model.Payment;
+import ru.lakidemon.store.unitpay.RequestParams;
+import ru.lakidemon.store.unitpay.Result;
 
 import java.util.List;
 
