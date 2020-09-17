@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ru.lakidemon.store.unitpay.RequestMethod;
 import ru.lakidemon.store.unitpay.RequestParams;
 import ru.lakidemon.store.unitpay.Result;
-import ru.lakidemon.store.unitpay.UnitpayService;
+import ru.lakidemon.store.service.UnitpayService;
 
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
