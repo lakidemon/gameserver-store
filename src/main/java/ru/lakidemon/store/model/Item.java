@@ -1,12 +1,25 @@
 package ru.lakidemon.store.model;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import javax.persistence.Table;
+import lombok.*;
+
+import javax.persistence.*;
 
 @Entity
 @Table(name = "items")
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@ToString
+@Builder
 public class Item {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column
+    private String name;
+    @Column
+    private String shortDesc;
+    @Column
+    private int price;
 }

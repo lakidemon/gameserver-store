@@ -1,13 +1,18 @@
 package ru.lakidemon.store.model;
 
-import lombok.Data;
+import lombok.*;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "payments")
-@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Getter
+@Setter
+@ToString
+@Builder
 public class Payment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -18,8 +23,6 @@ public class Payment {
     private Order order;
     @Column(name = "ip")
     private String ip;
-    @Column(name = "signature")
-    private String signature;
     @Column(name = "pay_link")
     private String payLink;
     @Column(name = "time_finished")
