@@ -34,7 +34,7 @@ public class UnitpayServiceImpl implements UnitpayService {
 
     @Override
     public Payment createPayment(Order order) {
-        var sign = generateSignature(Stream.of(order.getTotalSum(), order.getItem().getShortDesc(), order.getTotalSum())
+        var sign = generateSignature(Stream.of(order.getId(), order.getItem().getShortDesc(), order.getTotalSum())
                 .map(Objects::toString)
                 .collect(Collectors.toList()));
         var url = UriComponentsBuilder.fromHttpUrl(UNITPAY + publicKey)
