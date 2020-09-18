@@ -7,6 +7,7 @@ plugins {
 generateLombokConfig.enabled = false
 
 repositories {
+    mavenCentral()
     jcenter()
 }
 
@@ -17,13 +18,14 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.hibernate:hibernate-java8'
     implementation 'ch.qos.logback:logback-classic'
-    implementation 'com.h2database:h2:1.4.200'
+    implementation 'com.h2database:h2'
     implementation 'com.google.guava:guava:29.0-jre'
     implementation 'com.fasterxml.jackson.core:jackson-databind'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jdk8'
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.6.0'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.6.0'
+    testImplementation ('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
 }
 
 dependencyManagement {
@@ -35,6 +37,5 @@ dependencyManagement {
 }
 
 test {
-    // Use junit platform for unit tests
     useJUnitPlatform()
 }
