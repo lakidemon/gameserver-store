@@ -41,7 +41,7 @@ class UnitpayServiceImplTest {
     void shouldGenerateCorrectUrlAndSavePayment() {
         var payment = unitpayService.createPayment(Order.builder()
                 .id(1000L)
-                .item(Item.builder().name("Test").shortDesc("Description").price(100).build())
+                .item(Item.builder().name("Test").shortDescription("Description").price(100).build())
                 .totalSum(100)
                 .placedTime(LocalDateTime.now())
                 .customer("Lakidemon")
