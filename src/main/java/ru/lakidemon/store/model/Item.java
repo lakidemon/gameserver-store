@@ -3,6 +3,7 @@ package ru.lakidemon.store.model;
 import lombok.*;
 
 import javax.persistence.*;
+import java.util.Currency;
 
 @Entity
 @Table(name = "items")
@@ -22,4 +23,11 @@ public class Item {
     private String shortDesc;
     @Column
     private int price;
+    @Column(name = "discount")
+    private double discount;
+
+    public int getPriceWithDiscount() {
+        return (int) (price - (price * discount)); // remainder is not needed
+    }
+
 }
