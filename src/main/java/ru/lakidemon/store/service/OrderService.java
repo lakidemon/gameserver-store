@@ -7,8 +7,6 @@ public interface OrderService {
 
     Order createOrder(String customer, Item item);
 
-    boolean canOrder(String customer, Item what);
-
     boolean dispatchOrder(Order order);
 
 }
