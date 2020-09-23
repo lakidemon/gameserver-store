@@ -2,8 +2,10 @@ package ru.lakidemon.store.service.standard;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import ru.lakidemon.store.model.DispatchedOrder;
 import ru.lakidemon.store.model.Item;
 import ru.lakidemon.store.model.Order;
+import ru.lakidemon.store.repository.DispatchedOrdersRepository;
 import ru.lakidemon.store.repository.OrdersRepository;
 import ru.lakidemon.store.service.OrderService;
 
@@ -13,6 +15,7 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class OrderServiceImpl implements OrderService {
     private final OrdersRepository ordersRepository;
+    private final DispatchedOrdersRepository dispatchedRepository;
 
     @Override
     public Order createOrder(String customer, Item item) {
@@ -27,14 +30,10 @@ public class OrderServiceImpl implements OrderService {
     }
 
     @Override
-    public boolean canOrder(String customer, Item what) {
-        // some checks on game server here(eg. false if player already has this item)
-        return true;
-    }
-
-    @Override
     public boolean dispatchOrder(Order order) {
-        // ask game server to dispatch order
+        // this is demo
+        dispatchedRepository.save(
+                DispatchedOrder.builder().itemName(order.getItem().getName()).player(order.getCustomer()).build());
         return true;
     }
 
