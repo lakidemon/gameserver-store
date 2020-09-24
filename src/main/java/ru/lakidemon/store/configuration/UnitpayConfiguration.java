@@ -1,26 +1,22 @@
 package ru.lakidemon.store.configuration;
 
-import org.springframework.context.annotation.Bean;
+import lombok.Data;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
+@ConfigurationProperties(prefix = "unitpay")
+@Data
 public class UnitpayConfiguration {
+    private String secretKey;
+    private String publicKey;
+    private List<String> allowedIPs;
+    private String paymentUrl;
 
-    @Bean
-    String secretKey() {
-        return "";
+    void setAllowedIPs(String allowedIPs) {
+        this.allowedIPs = Arrays.asList(allowedIPs.split(","));
     }
-
-    @Bean
-    String publicKey() {
-        return "";
-    }
-
-    @Bean
-    List<String> allowedIPs() {
-        return List.of("31.186.100.49", "178.132.203.105", "52.29.152.23", "52.19.56.234", "127.0.0.1");
-    }
-
 }
