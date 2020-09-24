@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Currency;
 import java.util.List;
 
 @Configuration
@@ -16,6 +17,7 @@ public class UnitpayConfiguration {
     private String publicKey = "";
     private List<String> allowedIPs = Collections.emptyList();
     private String paymentUrl = "https://unitpay.money/pay/";
+    private Currency currency = Currency.getInstance("RUB");
 
     void setAllowedIPs(String allowedIPs) {
         this.allowedIPs = Arrays.asList(allowedIPs.split(","));

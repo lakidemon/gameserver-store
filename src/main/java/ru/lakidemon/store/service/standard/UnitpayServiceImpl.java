@@ -30,11 +30,12 @@ public class UnitpayServiceImpl implements UnitpayService {
 
     @Override
     public Payment createPayment(Order order) {
-        var sign = generateSignature(Stream.of(order.getId(), order.getItem().getShortDesc(), order.getTotalSum())
-                .map(Objects::toString)
-                .collect(Collectors.toList()));
+        var sign = generateSignature(
+                Stream.of(order.getId(), unitpayConfig.getCurrency().getCurrencyCode(), order.getItem().getShortDesc(),
+                        order.getTotalSum()).map(Objects::toString).collect(Collectors.toList()));
         var url = UriComponentsBuilder.fromHttpUrl(unitpayConfig.getPaymentUrl() + unitpayConfig.getPublicKey())
                 .queryParam("sum", order.getTotalSum())
+                .queryParam("currency", unitpayConfig.getCurrency().getCurrencyCode())
                 .queryParam("account", order.getId())
                 .queryParam("desc", order.getItem().getShortDesc())
                 .queryParam("signature", sign)
@@ -54,6 +55,10 @@ public class UnitpayServiceImpl implements UnitpayService {
         if (payment.getOrder().getTotalSum() != (int) params.getOrderSum()) {
             return Result.error(String.format("Некорректная сумма платежа: %d != %d", payment.getOrder().getTotalSum(),
                     (int) params.getOrderSum()));
+        }
+        if (!unitpayConfig.getCurrency().equals(params.getOrderCurrency())) {
+            return Result.error(String.format("Некорректная валюта платежа: %s != %s", unitpayConfig.getCurrency(),
+                    params.getOrderCurrency()));
         }
         if (payment.getCompleteTime() != null) {
             return Result.error("Повторная обработка платежа");

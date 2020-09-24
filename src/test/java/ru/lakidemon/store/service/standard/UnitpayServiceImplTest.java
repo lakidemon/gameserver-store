@@ -14,6 +14,7 @@ import ru.lakidemon.store.service.OrderService;
 import ru.lakidemon.store.unitpay.RequestParams;
 
 import java.time.LocalDateTime;
+import java.util.Currency;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,8 +52,8 @@ class UnitpayServiceImplTest {
                 .build());
         verify(paymentsRepository).save(payment);
         assertEquals(new StringBuilder(PAYMENT_URL).append(PUBLIC_KEY)
-                .append("?sum=100&account=1000&desc=Description&signature"
-                        + "=7448269e1c169fed23716d4f3a6d8d4af6c83075c610e2f720a21dd41f80f9c8")
+                .append("?sum=100&currency=RUB&account=1000&desc=Description&signature"
+                        + "=b7bf9c2b9eea3df8f503c56cd0a2c0845f0eb8a4beb68bdc9ccb5958a1a4cbf4")
                 .toString(), payment.getPayLink());
     }
 
@@ -70,6 +71,16 @@ class UnitpayServiceImplTest {
         when(paymentsRepository.findByOrderId(1)).thenReturn(Optional.of(payment));
         assertEquals("Некорректная сумма платежа: 100 != 101",
                 unitpayService.checkPayment(RequestParams.builder().orderId(1).orderSum(101).build()).getMessage());
+    }
+
+    @Test
+    void shouldFailWhenCurrencyDoesntMatch() {
+        Order order = Order.builder().totalSum(100).build();
+        Payment payment = Payment.builder().order(order).build();
+        when(paymentsRepository.findByOrderId(1)).thenReturn(Optional.of(payment));
+        assertEquals("Некорректная валюта платежа: RUB != USD", unitpayService.checkPayment(
+                RequestParams.builder().orderId(1).orderSum(100).orderCurrency(Currency.getInstance("USD")).build())
+                .getMessage());
     }
 
     @Test
@@ -116,7 +127,7 @@ class UnitpayServiceImplTest {
 
     @Test
     void shouldGenerateCorrectSignature() {
-        assertEquals("7448269e1c169fed23716d4f3a6d8d4af6c83075c610e2f720a21dd41f80f9c8",
-                unitpayService.generateSignature(List.of("1000", "Description", "100")));
+        assertEquals("b7bf9c2b9eea3df8f503c56cd0a2c0845f0eb8a4beb68bdc9ccb5958a1a4cbf4",
+                unitpayService.generateSignature(List.of("1000", "RUB", "Description", "100")));
     }
 }
