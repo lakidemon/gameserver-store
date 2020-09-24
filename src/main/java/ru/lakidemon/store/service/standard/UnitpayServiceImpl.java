@@ -33,7 +33,7 @@ public class UnitpayServiceImpl implements UnitpayService {
         var sign = generateSignature(Stream.of(order.getId(), order.getItem().getShortDesc(), order.getTotalSum())
                 .map(Objects::toString)
                 .collect(Collectors.toList()));
-        var url = UriComponentsBuilder.fromHttpUrl(unitpayConfig.getPaymentUrl() + unitpayConfig.getPaymentUrl())
+        var url = UriComponentsBuilder.fromHttpUrl(unitpayConfig.getPaymentUrl() + unitpayConfig.getPublicKey())
                 .queryParam("sum", order.getTotalSum())
                 .queryParam("account", order.getId())
                 .queryParam("desc", order.getItem().getShortDesc())
