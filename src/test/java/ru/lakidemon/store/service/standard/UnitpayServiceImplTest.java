@@ -2,15 +2,10 @@ package ru.lakidemon.store.service.standard;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-
-import static org.mockito.Mockito.*;
-
 import org.mockito.junit.jupiter.MockitoExtension;
+import ru.lakidemon.store.configuration.UnitpayConfiguration;
 import ru.lakidemon.store.model.Item;
 import ru.lakidemon.store.model.Order;
 import ru.lakidemon.store.model.Payment;
@@ -22,10 +17,14 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 @ExtendWith(MockitoExtension.class)
 class UnitpayServiceImplTest {
     static final String SECRET_KEY = "12345";
     static final String PUBLIC_KEY = "54321";
+    static final String PAYMENT_URL = "https://unitpay.money/pay/";
     @Mock
     private PaymentsRepository paymentsRepository;
     @Mock
@@ -34,7 +33,11 @@ class UnitpayServiceImplTest {
 
     @BeforeEach
     void setup() {
-        unitpayService = new UnitpayServiceImpl(SECRET_KEY, PUBLIC_KEY, paymentsRepository, orderService);
+        var config = new UnitpayConfiguration();
+        config.setSecretKey(SECRET_KEY);
+        config.setPublicKey(PUBLIC_KEY);
+        config.setPaymentUrl(PAYMENT_URL);
+        unitpayService = new UnitpayServiceImpl(config, paymentsRepository, orderService);
     }
 
     @Test
@@ -47,7 +50,7 @@ class UnitpayServiceImplTest {
                 .customer("Lakidemon")
                 .build());
         verify(paymentsRepository).save(payment);
-        assertEquals(new StringBuilder("https://unitpay.money/pay/").append(PUBLIC_KEY)
+        assertEquals(new StringBuilder(PAYMENT_URL).append(PUBLIC_KEY)
                 .append("?sum=100&account=1000&desc=Description&signature"
                         + "=7448269e1c169fed23716d4f3a6d8d4af6c83075c610e2f720a21dd41f80f9c8")
                 .toString(), payment.getPayLink());
