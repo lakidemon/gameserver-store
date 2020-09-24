@@ -7,11 +7,7 @@ import java.util.Currency;
 
 @Entity
 @Table(name = "items")
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
-@Setter
-@ToString
+@Data
 @Builder
 public class Item {
     @Id

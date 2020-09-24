@@ -2,9 +2,9 @@ package ru.lakidemon.store.service.standard;
 
 import com.google.common.hash.Hashing;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
+import ru.lakidemon.store.configuration.UnitpayConfiguration;
 import ru.lakidemon.store.model.Order;
 import ru.lakidemon.store.model.Payment;
 import ru.lakidemon.store.repository.PaymentsRepository;
@@ -24,11 +24,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class UnitpayServiceImpl implements UnitpayService {
     private static final String SIGN_DELIMITER = "{up}";
-    private static final String UNITPAY = "https://unitpay.money/pay/";
-    @Qualifier("secretKey")
-    private final String secretKey;
-    @Qualifier("publicKey")
-    private final String publicKey;
+    private final UnitpayConfiguration unitpayConfig;
     private final PaymentsRepository paymentsRepository;
     private final OrderService orderService;
 
@@ -37,7 +33,7 @@ public class UnitpayServiceImpl implements UnitpayService {
         var sign = generateSignature(Stream.of(order.getId(), order.getItem().getShortDescription(), order.getTotalSum())
                 .map(Objects::toString)
                 .collect(Collectors.toList()));
-        var url = UriComponentsBuilder.fromHttpUrl(UNITPAY + publicKey)
+        var url = UriComponentsBuilder.fromHttpUrl(unitpayConfig.getPaymentUrl() + unitpayConfig.getPublicKey())
                 .queryParam("sum", order.getTotalSum())
                 .queryParam("account", order.getId())
                 .queryParam("desc", order.getItem().getShortDescription())
@@ -92,7 +88,9 @@ public class UnitpayServiceImpl implements UnitpayService {
 
     @Override
     public String generateSignature(List<String> orderedValues) {
-        var input = String.join(SIGN_DELIMITER, orderedValues).concat(SIGN_DELIMITER).concat(secretKey);
+        var input = String.join(SIGN_DELIMITER, orderedValues)
+                .concat(SIGN_DELIMITER)
+                .concat(unitpayConfig.getSecretKey());
         return Hashing.sha256().hashString(input, StandardCharsets.UTF_8).toString();
     }
 }

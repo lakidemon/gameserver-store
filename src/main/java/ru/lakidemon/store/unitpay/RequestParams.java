@@ -13,8 +13,6 @@ import java.time.format.DateTimeFormatter;
 @Data
 @Builder
 public class RequestParams {
-    public static final DateTimeFormatter FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-
     private int unitpayId;
     private int projectId;
     @JsonProperty("account")
@@ -27,8 +25,7 @@ public class RequestParams {
     private double orderSum;
     private String orderCurrency;
     private String operator;
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime date;
     private String errorMessage;
     private String signature;
