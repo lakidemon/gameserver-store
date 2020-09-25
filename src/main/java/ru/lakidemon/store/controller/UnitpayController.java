@@ -33,8 +33,10 @@ public class UnitpayController {
                 .collect(Collectors.toCollection(LinkedList::new));
         valuesList.addFirst(method.name().toLowerCase());
         var requestParams = objectMapper.convertValue(paramsMap, RequestParams.class);
+        // TODO: log
         if (!unitpayService.validateSignature(requestParams.getSignature(), valuesList)) {
-            return Result.error("Signature mismatch");
+            // TODO: log
+            return Result.error(Result.Message.SIGNATURE_MISMATCH);
         }
 
         switch (method) {
@@ -45,9 +47,10 @@ public class UnitpayController {
         case ERROR:
             return unitpayService.handleError(requestParams);
         case PREAUTH:
-            return Result.result("OK"); // unused
+            return Result.result(Result.Message.OK); // unused
         default:
-            return Result.error("Unexpected method " + method);
+            // TODO: log
+            return Result.error(Result.Message.UNEXPECTED_METHOD);
         }
     }
 

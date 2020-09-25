@@ -47,43 +47,45 @@ public class UnitpayServiceImpl implements UnitpayService {
 
     @Override
     public Result checkPayment(RequestParams params) {
+        // TODO: log
         var paymentOpt = paymentsRepository.findByOrderId(params.getOrderId());
         if (paymentOpt.isEmpty()) {
-            return Result.error(String.format("Платёж %d не найден", params.getOrderId()));
+            return Result.error(Result.Message.PAYMENT_NOTFOUND);
         }
         var payment = paymentOpt.get();
         if (payment.getOrder().getTotalSum() != (int) params.getOrderSum()) {
-            return Result.error(String.format("Некорректная сумма платежа: %d != %d", payment.getOrder().getTotalSum(),
-                    (int) params.getOrderSum()));
+            return Result.error(Result.Message.INCORRECT_SUM);
         }
         if (!unitpayConfig.getCurrency().equals(params.getOrderCurrency())) {
-            return Result.error(String.format("Некорректная валюта платежа: %s != %s", unitpayConfig.getCurrency(),
-                    params.getOrderCurrency()));
+            return Result.error(Result.Message.INCORRECT_CURRENCY);
         }
         if (payment.getCompleteTime() != null) {
-            return Result.error("Повторная обработка платежа");
+            return Result.error(Result.Message.REPEAT_HANDLING);
         }
-        return Result.result("Всё отлично!");
+        return Result.result(Result.Message.CHECK_OK);
     }
 
     @Override
     public Result confirmPayment(RequestParams params) {
+        // TODO: log
         var recheck = checkPayment(params);
         if (recheck.isError()) {
             return recheck;
         }
-        var payment = paymentsRepository.findByOrderId(params.getOrderId()).get();
-        if (!orderService.dispatchOrder(payment.getOrder())) {
-            return Result.error("Не удалось произвести выдачу товара");
-        }
-        payment.setCompleteTime(LocalDateTime.now());
-        paymentsRepository.save(payment);
-        return Result.result("ОК");
+        return paymentsRepository.findByOrderId(params.getOrderId()).map(payment -> {
+            if (!orderService.dispatchOrder(payment.getOrder())) {
+                return Result.error(Result.Message.DISPATCH_FAILED);
+            }
+            payment.setCompleteTime(LocalDateTime.now());
+            paymentsRepository.save(payment);
+            return Result.result(Result.Message.CONFIRM_OK);
+        }).orElse(Result.error(Result.Message.PAYMENT_NOTFOUND));
     }
 
     @Override
     public Result handleError(RequestParams params) {
-        return Result.result("OK"); // not terminal operation
+        // TODO: log
+        return Result.result(Result.Message.OK); // not terminal operation
     }
 
     @Override
