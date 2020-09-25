@@ -2,6 +2,7 @@ package ru.lakidemon.store.service.standard;
 
 import com.google.common.hash.Hashing;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.util.UriComponentsBuilder;
 import ru.lakidemon.store.configuration.UnitpayConfiguration;
@@ -23,7 +24,12 @@ import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UnitpayServiceImpl implements UnitpayService {
+    private static final String CHECK = "CHECK:";
+    private static final String ERROR = "ERROR:";
+    private static final String CONFIRM = "CONFIRM:";
+
     private static final String SIGN_DELIMITER = "{up}";
     private final UnitpayConfiguration unitpayConfig;
     private final PaymentsRepository paymentsRepository;
@@ -48,53 +54,51 @@ public class UnitpayServiceImpl implements UnitpayService {
 
     @Override
     public Result checkPayment(RequestParams params) {
-        // TODO: log
-        var paymentOpt = paymentsRepository.findByOrderId(params.getOrderId());
-        if (paymentOpt.isEmpty()) {
+        var payment = getPaymentOrPrintError(params, CHECK);
+        if (payment == null) {
             return Result.error(Result.Message.PAYMENT_NOTFOUND);
         }
-        var payment = paymentOpt.get();
-        if (payment.getOrder().getTotalSum() != (int) params.getOrderSum()) {
-            return Result.error(Result.Message.INCORRECT_SUM);
+        var result = checkRequestDetails(CHECK, params, payment);
+        if (!result.isError()) {
+            log.info("{} OK. ID: {}, UnitPay ID: {}", CHECK, params.getOrderId(), params.getUnitpayId());
         }
-        if (!unitpayConfig.getCurrency().equals(params.getOrderCurrency())) {
-            return Result.error(Result.Message.INCORRECT_CURRENCY);
-        }
-        if (payment.getCompleteTime() != null) {
-            return Result.error(Result.Message.REPEAT_HANDLING);
-        }
-        return Result.result(Result.Message.CHECK_OK);
+        return result;
     }
 
     @Override
     public Result confirmPayment(RequestParams params) {
-        // TODO: log
-        var recheck = checkPayment(params);
+        var payment = getPaymentOrPrintError(params, CONFIRM);
+        if (payment == null) {
+            return Result.error(Result.Message.PAYMENT_NOTFOUND);
+        }
+        var recheck = checkRequestDetails(CONFIRM, params, payment);
         if (recheck.isError()) {
             return recheck;
         }
-        return paymentsRepository.findByOrderId(params.getOrderId()).map(payment -> {
-            if (!orderService.dispatchOrder(payment.getOrder())) {
-                return Result.error(Result.Message.DISPATCH_FAILED);
-            }
-            payment.setCompleteTime(LocalDateTime.now());
-            payment.setCurrentState(PaymentStatus.CONFIRMED);
-            paymentsRepository.save(payment);
-            return Result.result(Result.Message.CONFIRM_OK);
-        }).orElse(Result.error(Result.Message.PAYMENT_NOTFOUND));
+        if (!orderService.dispatchOrder(payment.getOrder())) {
+            log.warn("{} Failed to dispatch order. ID: {}, UnitPay ID: {}", CONFIRM, params.getOrderId(),
+                    params.getUnitpayId());
+            return Result.error(Result.Message.DISPATCH_FAILED);
+        }
+        payment.setCompleteTime(LocalDateTime.now());
+        payment.setCurrentState(PaymentStatus.CONFIRMED);
+        paymentsRepository.save(payment);
+        log.info("{} Dispatched order for {}. ID: {}, UnitPay ID: {}", CONFIRM, payment.getOrder().getCustomer(),
+                params.getOrderId(), params.getUnitpayId());
+        return Result.result(Result.Message.CONFIRM_OK);
     }
 
     @Override
     public Result handleError(RequestParams params) {
-        var paymentOpt = paymentsRepository.findByOrderId(params.getOrderId());
-        if (paymentOpt.isEmpty()) {
+        var payment = getPaymentOrPrintError(params, ERROR);
+        if (payment == null) {
             return Result.error(Result.Message.PAYMENT_NOTFOUND);
         }
-        var payment = paymentOpt.get();
-        // TODO: log
         payment.setCurrentState(PaymentStatus.ERROR);
         payment.setErrorMessage(params.getErrorMessage());
         paymentsRepository.save(payment);
+        log.warn("{} UnitPay reported error: {}. ID: {}, UnitPay ID: {}", ERROR, params.getErrorMessage(),
+                params.getOrderId(), params.getUnitpayId());
         return Result.result(Result.Message.OK); // not terminal operation
     }
 
@@ -109,5 +113,33 @@ public class UnitpayServiceImpl implements UnitpayService {
                 .concat(SIGN_DELIMITER)
                 .concat(unitpayConfig.getSecretKey());
         return Hashing.sha256().hashString(input, StandardCharsets.UTF_8).toString();
+    }
+
+    private Payment getPaymentOrPrintError(RequestParams params, String phase) {
+        var paymentOpt = paymentsRepository.findByOrderId(params.getOrderId());
+        if (paymentOpt.isEmpty()) {
+            log.warn("{} Unknown order {}. UnitPay ID: {}", phase, params.getOrderId(), params.getUnitpayId());
+            return null;
+        }
+        return paymentOpt.get();
+    }
+
+    private Result checkRequestDetails(String phase, RequestParams params, Payment payment) {
+        if (payment.getCurrentState() == PaymentStatus.CONFIRMED) {
+            log.warn("{} Trying to handle already confirmed order. ID: {}, UnitPay ID: {}", phase,
+                    params.getOrderCurrency(), unitpayConfig.getCurrency(), params.getOrderId(), params.getUnitpayId());
+            return Result.error(Result.Message.REPEAT_HANDLING);
+        }
+        if (payment.getOrder().getTotalSum() != (int) params.getOrderSum()) {
+            log.warn("{} Incorrect sum {} ({} expected). ID: {}, UnitPay ID: {}", CHECK, params.getOrderSum(),
+                    payment.getOrder().getTotalSum(), params.getOrderId(), params.getUnitpayId());
+            return Result.error(Result.Message.INCORRECT_SUM);
+        }
+        if (!unitpayConfig.getCurrency().equals(params.getOrderCurrency())) {
+            log.warn("{} Incorrect currency {} ({} expected). ID: {}, UnitPay ID: {}", CHECK, params.getOrderCurrency(),
+                    unitpayConfig.getCurrency(), params.getOrderId(), params.getUnitpayId());
+            return Result.error(Result.Message.INCORRECT_CURRENCY);
+        }
+        return Result.result(Result.Message.CHECK_OK);
     }
 }
