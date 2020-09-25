@@ -33,12 +33,15 @@ public class UnitpayController {
                 .collect(Collectors.toCollection(LinkedList::new));
         valuesList.addFirst(method.name().toLowerCase());
         var requestParams = objectMapper.convertValue(paramsMap, RequestParams.class);
-        // TODO: log
         if (!unitpayService.validateSignature(requestParams.getSignature(), valuesList)) {
-            // TODO: log
             return Result.error(Result.Message.SIGNATURE_MISMATCH);
         }
+        // TODO: log
+        var result = handleRequest(method, requestParams);
+        return result;
+    }
 
+    public Result handleRequest(RequestMethod method, RequestParams requestParams) {
         switch (method) {
         case PAY:
             return unitpayService.confirmPayment(requestParams);
