@@ -11,6 +11,7 @@ import ru.lakidemon.store.model.Order;
 import ru.lakidemon.store.model.Payment;
 import ru.lakidemon.store.repository.PaymentsRepository;
 import ru.lakidemon.store.service.OrderService;
+import ru.lakidemon.store.unitpay.PaymentStatus;
 import ru.lakidemon.store.unitpay.RequestParams;
 import ru.lakidemon.store.unitpay.Result;
 
@@ -88,10 +89,15 @@ class UnitpayServiceImplTest {
     @Test
     void shouldFailWhenOrderIsDispatched() {
         Order order = Order.builder().totalSum(100).build();
-        Payment payment = Payment.builder().order(order).completeTime(LocalDateTime.now()).build();
+        Payment payment = Payment.builder()
+                .order(order)
+                .currentState(PaymentStatus.CONFIRMED)
+                .completeTime(LocalDateTime.now())
+                .build();
         when(paymentsRepository.findByOrderId(1)).thenReturn(Optional.of(payment));
         assertEquals(Result.Message.REPEAT_HANDLING,
-                unitpayService.checkPayment(RequestParams.builder().orderId(1).orderSum(100).orderCurrency(RUB).build()).getMessage());
+                unitpayService.checkPayment(RequestParams.builder().orderId(1).orderSum(100).orderCurrency(RUB).build())
+                        .getMessage());
     }
 
     @Test
@@ -100,7 +106,8 @@ class UnitpayServiceImplTest {
         Payment payment = Payment.builder().order(order).build();
         when(paymentsRepository.findByOrderId(1)).thenReturn(Optional.of(payment));
         assertEquals(Result.Message.CHECK_OK,
-                unitpayService.checkPayment(RequestParams.builder().orderId(1).orderSum(100).orderCurrency(RUB).build()).getMessage());
+                unitpayService.checkPayment(RequestParams.builder().orderId(1).orderSum(100).orderCurrency(RUB).build())
+                        .getMessage());
     }
 
     @Test
@@ -110,8 +117,8 @@ class UnitpayServiceImplTest {
         when(paymentsRepository.findByOrderId(1)).thenReturn(Optional.of(payment));
         when(orderService.dispatchOrder(any())).thenReturn(false);
 
-        assertEquals(Result.Message.DISPATCH_FAILED,
-                unitpayService.confirmPayment(RequestParams.builder().orderId(1).orderSum(100).orderCurrency(RUB).build()).getMessage());
+        assertEquals(Result.Message.DISPATCH_FAILED, unitpayService.confirmPayment(
+                RequestParams.builder().orderId(1).orderSum(100).orderCurrency(RUB).build()).getMessage());
     }
 
     @Test
@@ -121,8 +128,8 @@ class UnitpayServiceImplTest {
         when(paymentsRepository.findByOrderId(1)).thenReturn(Optional.of(payment));
         when(orderService.dispatchOrder(any())).thenReturn(true);
 
-        assertEquals(Result.Message.CONFIRM_OK,
-                unitpayService.confirmPayment(RequestParams.builder().orderId(1).orderSum(100).orderCurrency(RUB).build()).getMessage());
+        assertEquals(Result.Message.CONFIRM_OK, unitpayService.confirmPayment(
+                RequestParams.builder().orderId(1).orderSum(100).orderCurrency(RUB).build()).getMessage());
         assertNotNull(payment.getCompleteTime());
         verify(paymentsRepository).save(payment);
     }
