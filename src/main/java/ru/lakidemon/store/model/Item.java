@@ -7,6 +7,8 @@ import javax.persistence.*;
 @Entity
 @Table(name = "items")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Item {
     @Id

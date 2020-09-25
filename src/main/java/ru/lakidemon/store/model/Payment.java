@@ -1,7 +1,6 @@
 package ru.lakidemon.store.model;
 
-import lombok.Builder;
-import lombok.Data;
+import lombok.*;
 import ru.lakidemon.store.unitpay.PaymentStatus;
 
 import javax.persistence.*;
@@ -10,6 +9,8 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "payments")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Payment {
     @Id
