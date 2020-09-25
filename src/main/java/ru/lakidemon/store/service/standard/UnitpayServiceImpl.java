@@ -10,6 +10,7 @@ import ru.lakidemon.store.model.Payment;
 import ru.lakidemon.store.repository.PaymentsRepository;
 import ru.lakidemon.store.service.OrderService;
 import ru.lakidemon.store.service.UnitpayService;
+import ru.lakidemon.store.unitpay.PaymentStatus;
 import ru.lakidemon.store.unitpay.RequestParams;
 import ru.lakidemon.store.unitpay.Result;
 
@@ -77,6 +78,7 @@ public class UnitpayServiceImpl implements UnitpayService {
                 return Result.error(Result.Message.DISPATCH_FAILED);
             }
             payment.setCompleteTime(LocalDateTime.now());
+            payment.setCurrentState(PaymentStatus.CONFIRMED);
             paymentsRepository.save(payment);
             return Result.result(Result.Message.CONFIRM_OK);
         }).orElse(Result.error(Result.Message.PAYMENT_NOTFOUND));
@@ -84,7 +86,15 @@ public class UnitpayServiceImpl implements UnitpayService {
 
     @Override
     public Result handleError(RequestParams params) {
+        var paymentOpt = paymentsRepository.findByOrderId(params.getOrderId());
+        if (paymentOpt.isEmpty()) {
+            return Result.error(Result.Message.PAYMENT_NOTFOUND);
+        }
+        var payment = paymentOpt.get();
         // TODO: log
+        payment.setCurrentState(PaymentStatus.ERROR);
+        payment.setErrorMessage(params.getErrorMessage());
+        paymentsRepository.save(payment);
         return Result.result(Result.Message.OK); // not terminal operation
     }
 

@@ -1,6 +1,8 @@
 package ru.lakidemon.store.model;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Data;
+import ru.lakidemon.store.unitpay.PaymentStatus;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -19,6 +21,11 @@ public class Payment {
     private Order order;
     @Column(name = "pay_link")
     private String payLink;
+    @Column(name = "current_state")
+    @Builder.Default
+    private PaymentStatus currentState = PaymentStatus.PENDING;
+    @Column(name = "error_message")
+    private String errorMessage;
     @Column(name = "time_finished")
     private LocalDateTime completeTime;
 }
