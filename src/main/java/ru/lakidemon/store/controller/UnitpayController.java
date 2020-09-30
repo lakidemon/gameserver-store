@@ -2,6 +2,7 @@ package ru.lakidemon.store.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
+@Slf4j
 public class UnitpayController {
     private final UnitpayService unitpayService;
     private final ObjectMapper objectMapper;
@@ -33,10 +35,16 @@ public class UnitpayController {
                 .collect(Collectors.toCollection(LinkedList::new));
         valuesList.addFirst(method.name().toLowerCase());
         var requestParams = objectMapper.convertValue(paramsMap, RequestParams.class);
+        log.info("{} UnitPay request. PARAMS: {}", method, requestParams);
         if (!unitpayService.validateSignature(requestParams.getSignature(), valuesList)) {
-            return Result.error("Signature mismatch");
+            log.error("Signature mismatch. Order ID: {}, UnitPay ID: {}, Sign: {}, Values: {}",
+                    requestParams.getOrderId(), requestParams.getUnitpayId(), requestParams.getSignature(), valuesList);
+            return Result.error(Result.Message.SIGNATURE_MISMATCH);
         }
+        return handleRequest(method, requestParams);
+    }
 
+    public Result handleRequest(RequestMethod method, RequestParams requestParams) {
         switch (method) {
         case PAY:
             return unitpayService.confirmPayment(requestParams);
@@ -45,9 +53,10 @@ public class UnitpayController {
         case ERROR:
             return unitpayService.handleError(requestParams);
         case PREAUTH:
-            return Result.result("OK"); // unused
+            return Result.result(Result.Message.OK); // unused
         default:
-            return Result.error("Unexpected method " + method);
+            log.error("Unhandled method {}", method);
+            return Result.error(Result.Message.UNEXPECTED_METHOD);
         }
     }
 

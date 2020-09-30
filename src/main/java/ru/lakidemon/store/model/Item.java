@@ -8,6 +8,8 @@ import java.util.Currency;
 @Entity
 @Table(name = "items")
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 @Builder
 public class Item {
     @Id
