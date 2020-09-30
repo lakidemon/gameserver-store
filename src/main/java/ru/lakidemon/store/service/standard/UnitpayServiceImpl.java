@@ -76,7 +76,7 @@ public class UnitpayServiceImpl implements UnitpayService {
             return recheck;
         }
         if (!orderService.dispatchOrder(payment.getOrder())) {
-            log.warn("{} Failed to dispatch order. ID: {}, UnitPay ID: {}", CONFIRM, params.getOrderId(),
+            log.error("{} Failed to dispatch order. ID: {}, UnitPay ID: {}", CONFIRM, params.getOrderId(),
                     params.getUnitpayId());
             return Result.error(Result.Message.DISPATCH_FAILED);
         }
@@ -97,7 +97,7 @@ public class UnitpayServiceImpl implements UnitpayService {
         payment.setCurrentState(PaymentStatus.ERROR);
         payment.setErrorMessage(params.getErrorMessage());
         paymentsRepository.save(payment);
-        log.warn("{} UnitPay reported error: {}. ID: {}, UnitPay ID: {}", ERROR, params.getErrorMessage(),
+        log.error("{} UnitPay reported error: {}. ID: {}, UnitPay ID: {}", ERROR, params.getErrorMessage(),
                 params.getOrderId(), params.getUnitpayId());
         return Result.result(Result.Message.OK); // not terminal operation
     }
@@ -118,7 +118,7 @@ public class UnitpayServiceImpl implements UnitpayService {
     private Payment getPaymentOrPrintError(RequestParams params, String phase) {
         var paymentOpt = paymentsRepository.findByOrderId(params.getOrderId());
         if (paymentOpt.isEmpty()) {
-            log.warn("{} Unknown order {}. UnitPay ID: {}", phase, params.getOrderId(), params.getUnitpayId());
+            log.error("{} Unknown order {}. UnitPay ID: {}", phase, params.getOrderId(), params.getUnitpayId());
             return null;
         }
         return paymentOpt.get();
@@ -126,17 +126,17 @@ public class UnitpayServiceImpl implements UnitpayService {
 
     private Result checkRequestDetails(String phase, RequestParams params, Payment payment) {
         if (payment.getCurrentState() == PaymentStatus.CONFIRMED) {
-            log.warn("{} Trying to handle already confirmed order. ID: {}, UnitPay ID: {}", phase,
+            log.error("{} Trying to handle already confirmed order. ID: {}, UnitPay ID: {}", phase,
                     params.getOrderCurrency(), unitpayConfig.getCurrency(), params.getOrderId(), params.getUnitpayId());
             return Result.error(Result.Message.REPEAT_HANDLING);
         }
         if (payment.getOrder().getTotalSum() != (int) params.getOrderSum()) {
-            log.warn("{} Incorrect sum {} ({} expected). ID: {}, UnitPay ID: {}", CHECK, params.getOrderSum(),
+            log.error("{} Incorrect sum {} ({} expected). ID: {}, UnitPay ID: {}", CHECK, params.getOrderSum(),
                     payment.getOrder().getTotalSum(), params.getOrderId(), params.getUnitpayId());
             return Result.error(Result.Message.INCORRECT_SUM);
         }
         if (!unitpayConfig.getCurrency().equals(params.getOrderCurrency())) {
-            log.warn("{} Incorrect currency {} ({} expected). ID: {}, UnitPay ID: {}", CHECK, params.getOrderCurrency(),
+            log.error("{} Incorrect currency {} ({} expected). ID: {}, UnitPay ID: {}", CHECK, params.getOrderCurrency(),
                     unitpayConfig.getCurrency(), params.getOrderId(), params.getUnitpayId());
             return Result.error(Result.Message.INCORRECT_CURRENCY);
         }

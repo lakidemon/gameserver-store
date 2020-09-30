@@ -37,7 +37,7 @@ public class UnitpayController {
         var requestParams = objectMapper.convertValue(paramsMap, RequestParams.class);
         log.info("{} UnitPay request. PARAMS: {}", method, requestParams);
         if (!unitpayService.validateSignature(requestParams.getSignature(), valuesList)) {
-            log.warn("Signature mismatch. Order ID: {}, UnitPay ID: {}, Sign: {}, Values: {}",
+            log.error("Signature mismatch. Order ID: {}, UnitPay ID: {}, Sign: {}, Values: {}",
                     requestParams.getOrderId(), requestParams.getUnitpayId(), requestParams.getSignature(), valuesList);
             return Result.error(Result.Message.SIGNATURE_MISMATCH);
         }
