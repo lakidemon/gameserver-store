@@ -38,13 +38,13 @@ public class UnitpayServiceImpl implements UnitpayService {
     @Override
     public Payment createPayment(Order order) {
         var sign = generateSignature(
-                Stream.of(order.getId(), unitpayConfig.getCurrency().getCurrencyCode(), order.getItem().getShortDesc(),
+                Stream.of(order.getId(), unitpayConfig.getCurrency().getCurrencyCode(), order.getItem().getShortDescription(),
                         order.getTotalSum()).map(Objects::toString).collect(Collectors.toList()));
         var url = UriComponentsBuilder.fromHttpUrl(unitpayConfig.getPaymentUrl() + unitpayConfig.getPublicKey())
                 .queryParam("sum", order.getTotalSum())
                 .queryParam("currency", unitpayConfig.getCurrency().getCurrencyCode())
                 .queryParam("account", order.getId())
-                .queryParam("desc", order.getItem().getShortDesc())
+                .queryParam("desc", order.getItem().getShortDescription())
                 .queryParam("signature", sign)
                 .toUriString();
         var payment = Payment.builder().payLink(url).order(order).build();
