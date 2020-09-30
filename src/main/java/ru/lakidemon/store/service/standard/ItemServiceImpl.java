@@ -7,7 +7,7 @@ import ru.lakidemon.store.repository.DispatchedOrdersRepository;
 import ru.lakidemon.store.repository.ItemsRepository;
 import ru.lakidemon.store.service.ItemService;
 
-import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -22,8 +22,8 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public Collection<Item> getAllItems() {
-        return (Collection<Item>) itemsRepository.findAll();
+    public List<Item> getAllItems() {
+        return itemsRepository.findAll();
     }
 
     @Override
