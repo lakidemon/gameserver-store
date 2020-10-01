@@ -1,10 +1,11 @@
 plugins {
     id 'java'
-    id 'org.springframework.boot' version '2.3.3.RELEASE'
+    id 'org.springframework.boot' version '2.3.4.RELEASE'
     id 'io.spring.dependency-management' version '1.0.10.RELEASE'
     id 'io.freefair.lombok' version '5.2.1'
 }
 generateLombokConfig.enabled = false
+[compileJava, compileTestJava]*.options*.encoding = 'UTF-8'
 
 repositories {
     mavenCentral()
@@ -31,7 +32,7 @@ dependencies {
 dependencyManagement {
     dependencies {
         imports {
-            mavenBom("org.springframework.boot:spring-boot-dependencies:2.3.3.RELEASE")
+            mavenBom("org.springframework.boot:spring-boot-dependencies:2.3.4.RELEASE")
         }
     }
 }
